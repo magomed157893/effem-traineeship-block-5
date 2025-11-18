@@ -1,0 +1,20 @@
+stages:
+  - test
+  - deploy
+
+test:
+  stage: test
+  image: php:8.3
+  before_script:
+    - apt-get update && apt-get install -y unzip git
+    - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+    - composer install --no-progress --no-suggest
+  script:
+    - vendor/bin/phpunit
+
+deploy:
+  stage: deploy
+  script:
+    - ssh $SSH_USER@$SSH_HOST "cd /var/www/project && git pull origin main && composer install --no-dev && php artisan migrate --force"
+  only:
+    - main
